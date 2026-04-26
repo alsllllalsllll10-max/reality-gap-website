@@ -81,7 +81,9 @@ export default function ClosingSection() {
             <ArrowUpRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
           </a>
           <a
-            href="mailto:abdullah.ibrahim.ali@email.com"
+            href="https://t.me/Abdullah1Ibrahim"
+            target="_blank"
+            rel="noopener noreferrer"
             className="group inline-flex items-center gap-2 px-7 py-3.5 rounded-xl bg-white/[0.05] border border-white/[0.1] text-white/60 font-barlow font-medium text-sm hover:bg-white/[0.08] hover:border-white/[0.2] hover:text-white/80 transition-all duration-300"
           >
             Contact Me
