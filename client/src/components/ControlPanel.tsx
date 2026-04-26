@@ -58,7 +58,7 @@ export default function ControlPanel({
     passwordRef.current = accessAttempt
   }, [accessAttempt])
 
-  const { urls, updateMedia, resetMedia } = useMedia()
+  const { urls, remoteMediaUrls, dirtyMedia, updateMedia, resetMedia } = useMedia()
   const [sharedVolume, setSharedVolume] = useSharedState('volume', 0.9)
 
   const mediaInputRefs = useRef<Record<string, HTMLInputElement | null>>({})
@@ -139,7 +139,7 @@ export default function ControlPanel({
         return
       }
 
-      const mediaObj: Record<string, string> = {}
+      const mediaObj: Record<string, string | null> = {}
       
       // Collect all local texts (stored in localStorage by EditableComment)
       const textsObj: Record<string, string> = {}
@@ -150,25 +150,50 @@ export default function ControlPanel({
         }
       }
 
-      // Collect local media urls and convert to Base64
-      for (const item of MEDIA_ITEMS) {
-        if (urls[item.id] && urls[item.id]!.startsWith('blob:')) {
-          const res = await fetch(urls[item.id]!)
-          const blob = await res.blob()
-          const b64 = await blobToBase64(blob)
-          // We embed small media as base64 data URIs directly to avoid complex file management
-          // For videos, this creates a data URI string. 
-          const mime = item.type === 'video' ? 'video/mp4' : 'image/jpeg'
-          mediaObj[item.id] = `data:${mime};base64,${b64}`
+      // Upload explicitly modified media files as separate files
+      const allItems = [...MEDIA_ITEMS, { id: 'backgroundMusic', type: 'audio' as const, name: 'Background Music', section: 'Global', accept: 'audio/*' }]
+
+      for (const item of allItems) {
+        const key = item.id as MediaKey
+        
+        // If it wasn't modified this session, keep the remote URL
+        if (!dirtyMedia.has(key)) {
+          if (remoteMediaUrls[key] !== undefined) {
+            mediaObj[key] = remoteMediaUrls[key] as string
+          }
+          continue
         }
-      }
-      
-      // Same for background music
-      if (urls.backgroundMusic && urls.backgroundMusic.startsWith('blob:')) {
-        const res = await fetch(urls.backgroundMusic)
-        const blob = await res.blob()
-        const b64 = await blobToBase64(blob)
-        mediaObj.backgroundMusic = `data:audio/mp3;base64,${b64}`
+
+        // If it was explicitly reset to null
+        if (urls[key] === null) {
+          mediaObj[key] = null
+          continue
+        }
+
+        // It's modified and has a blob URL. Let's upload it as a separate file.
+        if (urls[key] && urls[key]!.startsWith('blob:')) {
+          try {
+            const res = await fetch(urls[key]!)
+            const blob = await res.blob()
+            const b64 = await blobToBase64(blob)
+            
+            // Determine file extension
+            const ext = item.type === 'video' ? 'mp4' : item.type === 'audio' ? 'mp3' : 'jpg'
+            const fileName = `uploads/${key}-${Date.now()}.${ext}`
+            const filePath = `client/public/${fileName}`
+            
+            const success = await uploadToGithub(filePath, b64, `Upload ${key}`, token)
+            if (success) {
+              mediaObj[key] = `/${fileName}`
+            } else {
+               // Fallback to old URL if upload fails
+               if (remoteMediaUrls[key]) mediaObj[key] = remoteMediaUrls[key] as string
+            }
+          } catch (e) {
+             console.error("Upload error for " + key, e)
+             if (remoteMediaUrls[key]) mediaObj[key] = remoteMediaUrls[key] as string
+          }
+        }
       }
 
       // Merge and save
