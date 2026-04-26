@@ -1,6 +1,10 @@
 {
   "media": {
-    "heroVideo": "/uploads/heroVideo-1777180346240.mp4"
+    "heroVideo": "/uploads/heroVideo-1777180346240.mp4",
+    "imgPresentation": "/uploads/imgPresentation-1777180902078.jpg",
+    "imgFormalVsReal": "/uploads/imgFormalVsReal-1777180903980.jpg",
+    "imgStudents": "/uploads/imgStudents-1777180905639.jpg",
+    "imgClassroom": "/uploads/imgClassroom-1777180907260.jpg"
   },
   "texts": {
     "rg_comment_classroom": "In this photo, I took a picture with my students after the lesson. It was very interactive, and they were really engaged, which shows the class was comfortable and effective.",
