@@ -9,11 +9,10 @@ import ControlPanel from './components/ControlPanel'
 import { MediaProvider, useMedia } from './contexts/MediaContext'
 
 function AppContent() {
-  const [isAccessGranted, setIsAccessGranted] = useState(false)
   const [backgroundMusic, setBackgroundMusic] = useState<HTMLAudioElement | null>(null)
   const [isPlaying, setIsPlaying] = useState(false)
   const [volume, setVolume] = useState(0.9)
-  const { urls, isLoading } = useMedia()
+  const { urls, isLoading, isAccessGranted, setIsAccessGranted } = useMedia()
 
   // Scroll reveal animation
   useEffect(() => {

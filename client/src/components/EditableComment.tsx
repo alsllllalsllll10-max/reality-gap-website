@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Pencil, Check, RotateCcw } from 'lucide-react'
+import { useMedia } from '../contexts/MediaContext'
 
 interface EditableCommentProps {
   defaultText: string
@@ -13,17 +14,21 @@ export default function EditableComment({ defaultText, storageKey, label }: Edit
   const [text, setText] = useState('')
   const [savedText, setSavedText] = useState('')
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const { remoteTexts, isAccessGranted } = useMedia()
 
   useEffect(() => {
     const stored = localStorage.getItem(storageKey)
     if (stored !== null) {
       setSavedText(stored)
       setText(stored)
+    } else if (remoteTexts[storageKey]) {
+      setSavedText(remoteTexts[storageKey])
+      setText(remoteTexts[storageKey])
     } else {
       setSavedText(defaultText)
       setText(defaultText)
     }
-  }, [storageKey, defaultText])
+  }, [storageKey, defaultText, remoteTexts])
 
   useEffect(() => {
     if (isEditing && textareaRef.current) {
@@ -124,22 +129,26 @@ export default function EditableComment({ defaultText, storageKey, label }: Edit
                 {savedText}
               </p>
               {/* Edit button */}
-              <button
-                onClick={() => setIsEditing(true)}
-                className="absolute top-0 right-0 w-8 h-8 rounded-lg bg-white/[0.05] border border-white/[0.08] flex items-center justify-center opacity-0 group-hover:opacity-100 hover:bg-[#7EC8E3]/10 hover:border-[#7EC8E3]/30 transition-all duration-300"
-                title="Edit analysis"
-              >
-                <Pencil className="w-3.5 h-3.5 text-white/50 group-hover:text-[#7EC8E3] transition-colors" />
-              </button>
+              {isAccessGranted && (
+                <button
+                  onClick={() => setIsEditing(true)}
+                  className="absolute top-0 right-0 w-8 h-8 rounded-lg bg-white/[0.05] border border-white/[0.08] flex items-center justify-center opacity-0 group-hover:opacity-100 hover:bg-[#7EC8E3]/10 hover:border-[#7EC8E3]/30 transition-all duration-300"
+                  title="Edit analysis"
+                >
+                  <Pencil className="w-3.5 h-3.5 text-white/50 group-hover:text-[#7EC8E3] transition-colors" />
+                </button>
+              )}
             </div>
             {/* Mobile always-visible edit button */}
-            <button
-              onClick={() => setIsEditing(true)}
-              className="mt-3 md:hidden inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/[0.05] border border-white/[0.1] text-white/40 text-xs font-barlow"
-            >
-              <Pencil className="w-3 h-3" />
-              Edit
-            </button>
+            {isAccessGranted && (
+              <button
+                onClick={() => setIsEditing(true)}
+                className="mt-3 md:hidden inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/[0.05] border border-white/[0.1] text-white/40 text-xs font-barlow"
+              >
+                <Pencil className="w-3 h-3" />
+                Edit
+              </button>
+            )}
           </motion.div>
         )}
       </AnimatePresence>

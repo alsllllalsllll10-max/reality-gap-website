@@ -19,10 +19,14 @@ export const STORAGE_KEYS: Record<MediaKey, string> = {
 }
 
 type MediaUrls = Record<MediaKey, string | null>
+type RemoteConfig = { media: Partial<MediaUrls>, texts: Record<string, string> }
 
 interface MediaContextType {
   urls: MediaUrls
+  remoteTexts: Record<string, string>
   isLoading: boolean
+  isAccessGranted: boolean
+  setIsAccessGranted: (val: boolean) => void
   updateMedia: (key: MediaKey, file: File) => Promise<string>
   resetMedia: (key: MediaKey) => Promise<void>
 }
@@ -40,21 +44,37 @@ const MediaContext = createContext<MediaContextType | null>(null)
 
 export function MediaProvider({ children }: { children: React.ReactNode }) {
   const [urls, setUrls] = useState<MediaUrls>(defaultUrls)
+  const [remoteTexts, setRemoteTexts] = useState<Record<string, string>>({})
   const [isLoading, setIsLoading] = useState(true)
+  const [isAccessGranted, setIsAccessGranted] = useState(false)
   const trackedUrls = useRef<string[]>([])
 
-  // Load all saved media from IndexedDB on startup
+  // Fetch Remote Configuration & Local IndexedDB
   useEffect(() => {
     const load = async () => {
+      // 1. Fetch config from GitHub Pages
+      let config: RemoteConfig = { media: {}, texts: {} }
+      try {
+        const res = await fetch(`/reality-gap-website/config.json?t=${Date.now()}`)
+        if (res.ok) {
+          config = await res.json()
+        }
+      } catch (e) { console.error("Could not load remote config", e) }
+
+      setRemoteTexts(config.texts || {})
+
+      // 2. Load Local Overrides
       const entries = Object.entries(STORAGE_KEYS) as [MediaKey, string][]
-      const loaded: Partial<MediaUrls> = {}
+      const loaded: Partial<MediaUrls> = { ...config.media }
+
       for (const [ctxKey, storageKey] of entries) {
-        const url = await loadMediaAsUrl(storageKey)
-        if (url) {
-          loaded[ctxKey] = url
-          trackedUrls.current.push(url)
+        const localUrl = await loadMediaAsUrl(storageKey)
+        if (localUrl) {
+          loaded[ctxKey] = localUrl
+          trackedUrls.current.push(localUrl)
         }
       }
+      
       setUrls((prev) => ({ ...prev, ...loaded }))
       setIsLoading(false)
     }
@@ -64,7 +84,6 @@ export function MediaProvider({ children }: { children: React.ReactNode }) {
     }
   }, [])
 
-  /** Save file to IndexedDB, update context, return blob URL */
   const updateMedia = useCallback(async (key: MediaKey, file: File): Promise<string> => {
     await saveMediaFile(STORAGE_KEYS[key], file)
     const url = URL.createObjectURL(file)
@@ -73,14 +92,28 @@ export function MediaProvider({ children }: { children: React.ReactNode }) {
     return url
   }, [])
 
-  /** Delete file from IndexedDB and clear from context */
   const resetMedia = useCallback(async (key: MediaKey): Promise<void> => {
     await deleteMediaFile(STORAGE_KEYS[key])
-    setUrls((prev) => ({ ...prev, [key]: null }))
+    // Revert to remote config if exists
+    try {
+      const res = await fetch(`/reality-gap-website/config.json?t=${Date.now()}`)
+      if (res.ok) {
+        const config: RemoteConfig = await res.json()
+        setUrls((prev) => ({ ...prev, [key]: config.media[key] || null }))
+      } else {
+        setUrls((prev) => ({ ...prev, [key]: null }))
+      }
+    } catch {
+      setUrls((prev) => ({ ...prev, [key]: null }))
+    }
   }, [])
 
   return (
-    <MediaContext.Provider value={{ urls, isLoading, updateMedia, resetMedia }}>
+    <MediaContext.Provider value={{ 
+      urls, remoteTexts, isLoading, 
+      isAccessGranted, setIsAccessGranted, 
+      updateMedia, resetMedia 
+    }}>
       {children}
     </MediaContext.Provider>
   )
