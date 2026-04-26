@@ -17,7 +17,7 @@ export default function HeroSection({ backgroundMusic, isPlaying: bgIsPlaying, s
   const [hasStarted, setHasStarted] = useState(false)
   const sectionRef = useRef<HTMLDivElement>(null)
   const { urls } = useMedia()
-  const videoSrc = urls.heroVideo || '/manus-storage/VID_20260421_084924_164_510ca83b.mp4'
+  const videoSrc = urls.heroVideo || null
 
   useEffect(() => {
     const handleScroll = () => {
@@ -161,7 +161,7 @@ export default function HeroSection({ backgroundMusic, isPlaying: bgIsPlaying, s
           <div className="relative aspect-video bg-black">
             <video
               ref={videoRef}
-              src={videoSrc}
+              {...(videoSrc ? { src: videoSrc } : {})}
               className="w-full h-full object-cover"
               playsInline
               preload="metadata"

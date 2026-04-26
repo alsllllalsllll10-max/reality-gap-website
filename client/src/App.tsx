@@ -37,7 +37,7 @@ function AppContent() {
   useEffect(() => {
     if (isLoading) return // wait until IndexedDB is checked
 
-    const musicSrc = urls.backgroundMusic || '/manus-storage/official-music_19bc0ba9.mp3'
+    const musicSrc = urls.backgroundMusic || '/background-music.mp3'
     const audio = new Audio(musicSrc)
     audio.loop = true
     audio.volume = volume

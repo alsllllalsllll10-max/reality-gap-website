@@ -145,7 +145,7 @@ export default function ControlPanel({
       const textsObj: Record<string, string> = {}
       for (let i = 0; i < localStorage.length; i++) {
         const k = localStorage.key(i)
-        if (k && k.startsWith('rg_comment_')) {
+        if (k && k.startsWith('rg_')) {
           textsObj[k] = localStorage.getItem(k) || ''
         }
       }
@@ -358,7 +358,7 @@ export default function ControlPanel({
               {showQRCode && (
                 <div className="mt-3 p-3 bg-white/5 border border-white/10 rounded-lg flex items-center justify-center">
                   <img
-                    src="/manus-storage/QR_Code_Website_03746020.png"
+                    src="/QR_Code_Website.png"
                     alt="QR Code"
                     className="w-40 h-40"
                   />
