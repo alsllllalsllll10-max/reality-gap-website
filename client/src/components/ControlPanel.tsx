@@ -150,6 +150,12 @@ export default function ControlPanel({
         }
       }
 
+      // Strip base path helper
+      const stripBasePath = (url: string) => {
+        const basePath = '/reality-gap-website'
+        return url.startsWith(basePath) ? url.substring(basePath.length) : url
+      }
+
       // Upload explicitly modified media files as separate files
       const allItems = [...MEDIA_ITEMS, { id: 'backgroundMusic', type: 'audio' as const, name: 'Background Music', section: 'Global', accept: 'audio/*' }]
 
@@ -159,7 +165,7 @@ export default function ControlPanel({
         // If it wasn't modified this session, keep the remote URL
         if (!dirtyMedia.has(key)) {
           if (remoteMediaUrls[key] !== undefined) {
-            mediaObj[key] = remoteMediaUrls[key] as string
+            mediaObj[key] = stripBasePath(remoteMediaUrls[key] as string)
           }
           continue
         }
@@ -187,11 +193,11 @@ export default function ControlPanel({
               mediaObj[key] = `/${fileName}`
             } else {
                // Fallback to old URL if upload fails
-               if (remoteMediaUrls[key]) mediaObj[key] = remoteMediaUrls[key] as string
+               if (remoteMediaUrls[key]) mediaObj[key] = stripBasePath(remoteMediaUrls[key] as string)
             }
           } catch (e) {
              console.error("Upload error for " + key, e)
-             if (remoteMediaUrls[key]) mediaObj[key] = remoteMediaUrls[key] as string
+             if (remoteMediaUrls[key]) mediaObj[key] = stripBasePath(remoteMediaUrls[key] as string)
           }
         }
       }

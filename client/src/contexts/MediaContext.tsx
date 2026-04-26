@@ -77,11 +77,19 @@ export function MediaProvider({ children }: { children: React.ReactNode }) {
       }
 
       setRemoteTexts(config.texts || {})
-      setRemoteMediaUrls(config.media || {})
+      const basePath = import.meta.env.PROD ? '/reality-gap-website' : ''
+      const remoteUrls = config.media || {}
+      for (const key of Object.keys(remoteUrls)) {
+        const k = key as MediaKey
+        if (remoteUrls[k] && remoteUrls[k]!.startsWith('/')) {
+          remoteUrls[k] = basePath + remoteUrls[k]
+        }
+      }
+      setRemoteMediaUrls(remoteUrls)
 
       // 2. Load Local Overrides
       const entries = Object.entries(STORAGE_KEYS) as [MediaKey, string][]
-      const loaded: Partial<MediaUrls> = { ...config.media }
+      const loaded: Partial<MediaUrls> = { ...remoteUrls }
 
       for (const [ctxKey, storageKey] of entries) {
         const localUrl = await loadMediaAsUrl(storageKey)
