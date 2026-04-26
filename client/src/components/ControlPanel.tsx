@@ -58,7 +58,7 @@ export default function ControlPanel({
     passwordRef.current = accessAttempt
   }, [accessAttempt])
 
-  const { urls, updateMedia, resetMedia, isAccessGranted, setIsAccessGranted } = useMedia()
+  const { urls, updateMedia, resetMedia } = useMedia()
   const [sharedVolume, setSharedVolume] = useSharedState('volume', 0.9)
 
   const mediaInputRefs = useRef<Record<string, HTMLInputElement | null>>({})
